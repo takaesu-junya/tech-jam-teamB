@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  normal
+  meister
+}
+
+model UserTypeModel {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_types")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  employeeNumber String   @map("employee_number")
+  yearsOfService Int      @map("years_of_service")
+  icon           String?
+  password       String
+  userType       UserType @default(normal) @map("user_type")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  reviews Review[]
+
+  @@map("users")
+}
+
+model Review {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @map("user_id")
+  hotpepperShopId  String   @map("hotpepper_shop_id")
+  hotpepperShopName String  @map("hotpepper_shop_name")
+  content          String   @db.Text
+  rating           Int      @default(3) // 1-5の評価
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+  shop Shop? @relation(fields: [hotpepperShopId], references: [hotpepperShopId])
+
+  @@index([hotpepperShopId])
+  @@map("reviews")
+}
+
+model Shop {
+  id              Int      @id @default(autoincrement())
+  hotpepperShopId String   @unique @map("hotpepper_shop_id")
+  visitCounter    Int      @default(0) @map("visit_counter")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  reviews Review[]
+
+  @@map("shops")
+}
